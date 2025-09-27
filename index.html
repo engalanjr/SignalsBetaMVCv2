@@ -51,17 +51,9 @@
                 <i class="fas fa-th"></i>
                 Whitespace
             </button>
-            <button class="nav-tab" data-tab="signal-feed">
-                <i class="fas fa-stream"></i>
-                Signal Feed
-            </button>
             <button class="nav-tab" data-tab="my-portfolio">
                 <i class="fas fa-briefcase"></i>
                 My Portfolio
-            </button>
-            <button class="nav-tab" data-tab="actions">
-                <i class="fas fa-tasks"></i>
-                Action Plans
             </button>
         </nav>
 
@@ -72,38 +64,6 @@
                 <!-- Whitespace content will be dynamically generated here -->
             </div>
             
-            <!-- Signal Feed Tab -->
-            <div id="signal-feed" class="tab-content">
-                <!-- Priority Alert Banner -->
-                <div class="priority-alert-banner">
-                    <div class="alert-content">
-                        <i class="fas fa-exclamation-triangle alert-icon"></i>
-                        <span class="alert-text" id="signal-feed-summary">Loading signal summary...</span>
-                    </div>
-                </div>
-
-                <div class="filter-bar">
-                    <select id="categoryFilter" class="filter-select">
-                        <option value="">All Categories</option>
-                        <option value="Architecture">Architecture</option>
-                        <option value="Relationship">Relationship</option>
-                        <option value="Use Case">Use Case</option>
-                        <option value="User Engagement">User Engagement</option>
-                        <option value="Business">Business</option>
-                        <option value="Enablement">Enablement</option>
-                    </select>
-                    <select id="signalTypeFilter" class="filter-select">
-                        <option value="">All Signal Types</option>
-                        <option value="Risk">Risk</option>
-                        <option value="Opportunities">Opportunities</option>
-                        <option value="Enrichment">Enrichment</option>
-                    </select>
-                </div>
-
-                <div id="signalsList" class="signals-list">
-                    <!-- Signals will be populated here -->
-                </div>
-            </div>
 
             <!-- My Portfolio Tab -->
             <div id="my-portfolio" class="tab-content">
@@ -154,61 +114,8 @@
                 </div>
             </div>
 
-            <!-- Action Plans Tab -->
-            <div id="actions" class="tab-content">
-                <div class="actions-overview">
-                    <div class="overview-cards">
-                        <div class="overview-card">
-                            <div class="card-value" id="totalActions">0</div>
-                            <div class="card-label">Total Action Plans</div>
-                        </div>
-                        <div class="overview-card">
-                            <div class="card-value" id="pendingActions">0</div>
-                            <div class="card-label">Pending</div>
-                        </div>
-                        <div class="overview-card">
-                            <div class="card-value" id="inProgressActions">0</div>
-                            <div class="card-label">In Progress</div>
-                        </div>
-                        <div class="overview-card">
-                            <div class="card-value" id="projectedImpact">0</div>
-                            <div class="card-label">Completed</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="actions-filters">
-                    <button class="filter-btn active" data-filter="all">All Action Plans</button>
-                    <button class="filter-btn" data-filter="pending">Pending</button>
-                    <button class="filter-btn" data-filter="in-progress">In Progress</button>
-                    <button class="filter-btn" data-filter="completed">Completed</button>
-                </div>
-
-                <div id="actionsList" class="actions-list">
-                    <!-- Action items will be populated here -->
-                </div>
-            </div>
         </main>
 
-        <!-- Create Action Plan Drawer -->
-        <div id="createPlanDrawerBackdrop" class="drawer-backdrop"></div>
-        <div id="createPlanDrawer" class="drawer">
-            <div class="drawer-content">
-                <div class="drawer-header">
-                    <h2><i class="fas fa-lightbulb"></i> Create Action Plan</h2>
-                    <button class="drawer-close" id="closePlanDrawer">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="drawer-body">
-                    <!-- Plan creation form will be populated here -->
-                </div>
-                <div class="drawer-footer">
-                    <button class="btn btn-secondary" id="cancelPlan">Cancel</button>
-                    <button class="btn btn-primary" id="createPlan">Create Plan</button>
-                </div>
-            </div>
-        </div>
 
         <!-- Signal Details Drawer -->
         <div id="signalDrawer" class="drawer">
@@ -241,45 +148,6 @@
             </div>
         </div>
 
-        <!-- Add to Plan Drawer -->
-        <div id="addToPlanDrawer" class="plan-drawer">
-            <div class="plan-drawer-content">
-                <div class="plan-drawer-header">
-                    <h2>Add Action to Plan</h2>
-                    <button class="plan-drawer-close" onclick="PortfolioRenderer.closeAddToPlanDrawer()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                
-                <div class="plan-drawer-body">
-                    <div class="recommended-action-section">
-                        <h3>Recommended Action</h3>
-                        <div id="drawerActionTitle" class="action-title-display"></div>
-                    </div>
-                    
-                    <div class="toolbox-plays-section">
-                        <h3>Toolbox of Plays</h3>
-                        <div id="drawerPlaysContainer" class="drawer-plays-container">
-                            <!-- Plays will be loaded here -->
-                        </div>
-                    </div>
-                    
-                    <div class="plan-details-section">
-                        <h3>Plan Details</h3>
-                        <textarea id="drawerPlanDetails" placeholder="Add your comments or notes about this action plan..." rows="4"></textarea>
-                    </div>
-                </div>
-                
-                <div class="plan-drawer-footer">
-                    <div id="planDrawerError" class="plan-drawer-error" style="display: none;"></div>
-                    <div class="plan-drawer-buttons">
-                        <button class="btn btn-secondary" onclick="PortfolioRenderer.closeAddToPlanDrawer()">Cancel</button>
-                        <button class="btn btn-primary" onclick="PortfolioRenderer.createPlanFromDrawer()">Create Plan</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div id="addToPlanDrawerBackdrop" class="plan-drawer-backdrop"></div>
     </div>
 
 
@@ -341,47 +209,6 @@
                 console.error('❌ Failed to initialize Flux architecture:', error);
             }
             
-            // Set up the create plan button handler
-            document.addEventListener('click', async (e) => {
-                if (e.target.id === 'createPlan') {
-                    // Use the Flux ActionPlansService instead
-                    const drawerContent = document.querySelector('.drawer-body');
-                    const titleInput = drawerContent?.querySelector('input[placeholder*="title"]');
-                    const descriptionInput = drawerContent?.querySelector('textarea');
-                    
-                    if (titleInput && titleInput.value) {
-                        const signalId = window.appController?.selectedSignalId || null;
-                        
-                        // Get accountId from signalId using SignalsStore (eliminates fragile inference)
-                        let accountId = null;
-                        if (signalId && window.signalsStore) {
-                            try {
-                                const signal = window.signalsStore.getState().signalsById.get(signalId);
-                                accountId = signal?.account_id;
-                            } catch (error) {
-                                console.warn('Could not get accountId from signalId:', error);
-                            }
-                        }
-                        
-                        if (accountId) {
-                            await ActionPlansService.createActionPlan(
-                                signalId,
-                                accountId, // Pass accountId directly instead of requiring inference
-                                titleInput.value,
-                                descriptionInput?.value || ''
-                            );
-                            dispatcher.dispatch(Actions.closePlanDrawer());
-                        } else {
-                            dispatcher.dispatch(Actions.showMessage('Unable to determine account for action plan', 'error'));
-                        }
-                    } else {
-                        dispatcher.dispatch(Actions.showMessage('Please enter a plan title', 'error'));
-                    }
-                }
-                if (e.target.id === 'cancelPlan' || e.target.id === 'closePlanDrawer') {
-                    dispatcher.dispatch(Actions.closePlanDrawer());
-                }
-            });
         });
     </script>
 </body>
