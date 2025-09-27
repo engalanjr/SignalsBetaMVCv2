@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polarity Debug Test</title>
+</head>
+<body>
+    <h1>Signal Polarity Debug Test</h1>
+    <div id="output"></div>
+
+    <script type="module">
+        import { SignalsRepository } from './js/flux/repositories/SignalsRepository.js';
+        import { SignalDimensionService } from './js/flux/services/SignalDimensionService.js';
+
+        async function testPolarityMapping() {
+            console.log('🔍 Testing signal polarity mapping...');
+            
+            try {
+                // Load signal dimension service
+                const signalDimensionService = new SignalDimensionService();
+                await signalDimensionService.loadSignalDimensions();
+                console.log('✅ Loaded signal dimension service');
+                
+                // Load all data
+                const data = await SignalsRepository.loadAllData();
+                console.log('✅ Loaded all data');
+                
+                const accounts = Array.from(data.accounts.values());
+                console.log(`📊 Total accounts: ${accounts.length}`);
+                
+                // Count accounts with Risk signals
+                const accountsWithRiskSignals = accounts.filter(account => 
+                    account.signals.some(signal => {
+                        const polarity = signal.signal_polarity || signal['Signal Polarity'] || '';
+                        return polarity === 'Risk';
+                    })
+                );
+                
+                // Count accounts with Opportunity signals
+                const accountsWithOpportunitySignals = accounts.filter(account => 
+                    account.signals.some(signal => {
+                        const polarity = signal.signal_polarity || signal['Signal Polarity'] || '';
+                        return polarity === 'Opportunity';
+                    })
+                );
+                
+                console.log(`🚨 Accounts with Risk signals: ${accountsWithRiskSignals.length}`);
+                console.log(`📈 Accounts with Opportunity signals: ${accountsWithOpportunitySignals.length}`);
+                
+                // Show details for Risk accounts
+                console.log('\n🚨 Risk accounts:');
+                accountsWithRiskSignals.forEach(account => {
+                    const riskSignals = account.signals.filter(signal => {
+                        const polarity = signal.signal_polarity || signal['Signal Polarity'] || '';
+                        return polarity === 'Risk';
+                    });
+                    console.log(`  - ${account.name} (${account.id}): ${riskSignals.length} risk signals`);
+                    riskSignals.forEach(signal => {
+                        console.log(`    * ${signal.name} - ${signal.signal_polarity}`);
+                    });
+                });
+                
+                // Show details for Opportunity accounts
+                console.log('\n📈 Opportunity accounts:');
+                accountsWithOpportunitySignals.forEach(account => {
+                    const opportunitySignals = account.signals.filter(signal => {
+                        const polarity = signal.signal_polarity || signal['Signal Polarity'] || '';
+                        return polarity === 'Opportunity';
+                    });
+                    console.log(`  - ${account.name} (${account.id}): ${opportunitySignals.length} opportunity signals`);
+                    opportunitySignals.forEach(signal => {
+                        console.log(`    * ${signal.name} - ${signal.signal_polarity}`);
+                    });
+                });
+                
+                // Show all signal polarities
+                console.log('\n🔍 All signal polarities found:');
+                const allPolarities = new Set();
+                accounts.forEach(account => {
+                    account.signals.forEach(signal => {
+                        const polarity = signal.signal_polarity || signal['Signal Polarity'] || '';
+                        allPolarities.add(polarity);
+                    });
+                });
+                console.log('Polarities:', Array.from(allPolarities));
+                
+                const output = document.getElementById('output');
+                output.innerHTML = '<h2>Results:</h2>';
+                
+                const riskCount = document.createElement('p');
+                riskCount.innerHTML = '<strong>Accounts with Risk signals:</strong> ' + accountsWithRiskSignals.length;
+                output.appendChild(riskCount);
+                
+                const opportunityCount = document.createElement('p');
+                opportunityCount.innerHTML = '<strong>Accounts with Opportunity signals:</strong> ' + accountsWithOpportunitySignals.length;
+                output.appendChild(opportunityCount);
+                
+                const polarities = document.createElement('p');
+                polarities.innerHTML = '<strong>All polarities found:</strong> ' + Array.from(allPolarities).join(', ');
+                output.appendChild(polarities);
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                document.getElementById('output').innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+        
+        testPolarityMapping();
+    </script>
+</body>
+</html>

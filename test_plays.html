@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Plays Display</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #007DBA;
+        }
+        .play-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 3px;
+        }
+        .play-title {
+            font-weight: bold;
+            color: #333;
+        }
+        .play-description {
+            color: #666;
+            margin-top: 5px;
+        }
+        .status {
+            padding: 5px 10px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 3px;
+            margin-top: 10px;
+            display: inline-block;
+        }
+        .error {
+            background: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Plays Display</h1>
+    
+    <div class="test-section">
+        <h3>CSV Field Names Check</h3>
+        <div id="fieldCheck"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Sample Signal Data</h3>
+        <div id="sampleData"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Extracted Plays</h3>
+        <div id="extractedPlays"></div>
+    </div>
+
+    <script>
+        // Test function to check field names and extract plays
+        function testPlaysExtraction() {
+            // Simulate loading CSV data
+            fetch('/data.csv')
+                .then(response => response.text())
+                .then(csvText => {
+                    const lines = csvText.split('\n');
+                    const headers = lines[0].split(',');
+                    
+                    // Check for Play fields
+                    const playFields = headers.filter(h => h.includes('Play'));
+                    document.getElementById('fieldCheck').innerHTML = `
+                        <p><strong>Play-related fields found:</strong></p>
+                        <ul>${playFields.map(f => `<li>${f}</li>`).join('')}</ul>
+                        <div class="status">✓ Found ${playFields.length} play-related fields</div>
+                    `;
+                    
+                    // Parse first data row as sample
+                    if (lines.length > 1) {
+                        const dataRow = lines[1].split(',');
+                        const signal = {};
+                        headers.forEach((h, i) => {
+                            signal[h] = dataRow[i];
+                        });
+                        
+                        // Display sample data
+                        const sampleHtml = `
+                            <p><strong>Sample Signal Data:</strong></p>
+                            <div class="play-item">
+                                <div class="play-title">Play 1 Name: ${signal['Play 1 Name'] || 'Not found'}</div>
+                                <div class="play-description">Play 1 Description: ${signal['Play 1 Description'] || 'Not found'}</div>
+                            </div>
+                            <div class="play-item">
+                                <div class="play-title">Play 2 Name: ${signal['Play 2 Name'] || 'Not found'}</div>
+                                <div class="play-description">Play 2 Description: ${signal['Play 2 Description'] || 'Not found'}</div>
+                            </div>
+                            <div class="play-item">
+                                <div class="play-title">Play 3 Name: ${signal['Play 3 Name'] || 'Not found'}</div>
+                                <div class="play-description">Play 3 Description: ${signal['Play 3 Description'] || 'Not found'}</div>
+                            </div>
+                        `;
+                        document.getElementById('sampleData').innerHTML = sampleHtml;
+                        
+                        // Test the extraction logic
+                        let csPlays = [];
+                        
+                        // Extract play 1
+                        const play1Name = signal['Play 1 Name'] || signal.play_1_name || signal.play_1;
+                        if (play1Name && play1Name.trim() && play1Name !== 'N/A' && play1Name !== '') {
+                            csPlays.push({
+                                title: play1Name.trim(),
+                                description: signal['Play 1 Description'] || signal.play_1_description || signal.play_1 || 'No description available',
+                                executingRole: 'Adoption Consulting'
+                            });
+                        }
+                        
+                        // Extract play 2
+                        const play2Name = signal['Play 2 Name'] || signal.play_2_name || signal.play_2;
+                        if (play2Name && play2Name.trim() && play2Name !== 'N/A' && play2Name !== '') {
+                            csPlays.push({
+                                title: play2Name.trim(),
+                                description: signal['Play 2 Description'] || signal.play_2_description || signal.play_2 || 'No description available',
+                                executingRole: 'Adoption Consulting'
+                            });
+                        }
+                        
+                        // Extract play 3
+                        const play3Name = signal['Play 3 Name'] || signal.play_3_name || signal.play_3;
+                        if (play3Name && play3Name.trim() && play3Name !== 'N/A' && play3Name !== '') {
+                            csPlays.push({
+                                title: play3Name.trim(),
+                                description: signal['Play 3 Description'] || signal.play_3_description || signal.play_3 || 'No description available',
+                                executingRole: 'Adoption Consulting'
+                            });
+                        }
+                        
+                        // Display extracted plays
+                        if (csPlays.length > 0) {
+                            const playsHtml = csPlays.map((play, i) => `
+                                <div class="play-item">
+                                    <div class="play-title">Play ${i + 1}: ${play.title}</div>
+                                    <div class="play-description">Description: ${play.description}</div>
+                                    <div>Owner: ${play.executingRole}</div>
+                                </div>
+                            `).join('');
+                            document.getElementById('extractedPlays').innerHTML = `
+                                ${playsHtml}
+                                <div class="status">✓ Successfully extracted ${csPlays.length} plays</div>
+                            `;
+                        } else {
+                            document.getElementById('extractedPlays').innerHTML = `
+                                <div class="status error">✗ No plays extracted</div>
+                            `;
+                        }
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('fieldCheck').innerHTML = `
+                        <div class="status error">✗ Error loading CSV: ${error.message}</div>
+                    `;
+                });
+        }
+        
+        // Run test on page load
+        testPlaysExtraction();
+    </script>
+</body>
+</html>

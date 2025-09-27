@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignalsAI Feature Tests</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #007DBA;
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            border-left: 4px solid #007DBA;
+        }
+        .test-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .test-button {
+            background: #007DBA;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .test-button:hover {
+            background: #0066a0;
+        }
+        .test-result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .test-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 SignalsAI Feature Tests</h1>
+        
+        <!-- Application Frame -->
+        <div class="test-section">
+            <h2>Application View</h2>
+            <iframe id="appFrame" src="index.html"></iframe>
+        </div>
+
+        <!-- Signal Feed Tests -->
+        <div class="test-section">
+            <h2>📡 Signal Feed Tests</h2>
+            <div class="test-controls">
+                <button class="test-button" onclick="testSignalViewing()">Test Signal Viewing</button>
+                <button class="test-button" onclick="testLikeButton()">Test Like Button</button>
+                <button class="test-button" onclick="testNotAccurateButton()">Test Not Accurate Button</button>
+                <button class="test-button" onclick="testCommentCRUD()">Test Comment CRUD</button>
+                <button class="test-button" onclick="testPriorityFilters()">Test Priority Filters</button>
+            </div>
+            <div id="signalFeedResult" class="test-result"></div>
+        </div>
+
+        <!-- Portfolio Tests -->
+        <div class="test-section">
+            <h2>💼 My Portfolio Tests</h2>
+            <div class="test-controls">
+                <button class="test-button" onclick="testPortfolioNavigation()">Test Portfolio Tab</button>
+                <button class="test-button" onclick="testAddToPlan()">Test Add to Plan</button>
+                <button class="test-button" onclick="testExpandCollapse()">Test Expand/Collapse</button>
+                <button class="test-button" onclick="testPortfolioFilters()">Test Portfolio Filters</button>
+            </div>
+            <div id="portfolioResult" class="test-result"></div>
+        </div>
+
+        <!-- Action Plans Tests -->
+        <div class="test-section">
+            <h2>📋 Action Plans Tests</h2>
+            <div class="test-controls">
+                <button class="test-button" onclick="testActionPlansDisplay()">Test Action Plans Display</button>
+                <button class="test-button" onclick="testCheckboxFunctionality()">Test Checkbox Functionality</button>
+                <button class="test-button" onclick="testTaskDetailsModal()">Test Task Details Modal</button>
+                <button class="test-button" onclick="testAutoSave()">Test Auto-Save</button>
+            </div>
+            <div id="actionPlansResult" class="test-result"></div>
+        </div>
+
+        <!-- Store State Inspector -->
+        <div class="test-section">
+            <h2>🔍 Store State Inspector</h2>
+            <div class="test-controls">
+                <button class="test-button" onclick="inspectStoreState()">Inspect Current State</button>
+                <button class="test-button" onclick="inspectInteractions()">View Interactions</button>
+                <button class="test-button" onclick="inspectComments()">View Comments</button>
+                <button class="test-button" onclick="inspectActionPlans()">View Action Plans</button>
+            </div>
+            <div id="stateResult" class="test-result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Get reference to the app window
+        function getAppWindow() {
+            return document.getElementById('appFrame').contentWindow;
+        }
+
+        // Helper to display results
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.className = `test-result ${type}`;
+            element.textContent = message;
+        }
+
+        // Signal Feed Tests
+        async function testSignalViewing() {
+            const app = getAppWindow();
+            const result = [];
+            
+            try {
+                // Get first signal
+                const state = app.signalsStore.getState();
+                const signal = state.signals[0];
+                
+                if (!signal) {
+                    showResult('signalFeedResult', 'No signals found to test', 'error');
+                    return;
+                }
+                
+                result.push(`Testing signal: ${signal.signal_id}`);
+                
+                // Dispatch view action
+                app.dispatcher.dispatch(app.Actions.viewSignal(signal.signal_id));
+                
+                // Check if interaction was logged
+                await new Promise(resolve => setTimeout(resolve, 100));
+                const newState = app.signalsStore.getState();
+                const interactions = newState.interactions.get(signal.signal_id) || [];
+                const viewedInteraction = interactions.find(i => i.interactionType === 'viewed');
+                
+                if (viewedInteraction) {
+                    result.push('✅ View interaction logged successfully');
+                    result.push(`Interaction: ${JSON.stringify(viewedInteraction, null, 2)}`);
+                } else {
+                    result.push('❌ View interaction not found');
+                }
+                
+                showResult('signalFeedResult', result.join('\n'), viewedInteraction ? 'success' : 'error');
+            } catch (error) {
+                showResult('signalFeedResult', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testLikeButton() {
+            const app = getAppWindow();
+            const result = [];
+            
+            try {
+                const state = app.signalsStore.getState();
+                const signal = state.signals[0];
+                
+                result.push(`Testing like for signal: ${signal.signal_id}`);
+                
+                // Get initial like count
+                const initialCounts = app.FeedbackService.getSignalCounts(signal.signal_id);
+                result.push(`Initial likes: ${initialCounts.likes}`);
+                
+                // Submit like feedback
+                app.dispatcher.dispatch(app.Actions.submitFeedback(signal.signal_id, 'like'));
+                
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                // Check new count
+                const newCounts = app.FeedbackService.getSignalCounts(signal.signal_id);
+                result.push(`New likes: ${newCounts.likes}`);
+                
+                if (newCounts.likes > initialCounts.likes) {
+                    result.push('✅ Like button working correctly');
+                    
+                    // Test toggle - remove like
+                    app.dispatcher.dispatch(app.Actions.removeFeedback(signal.signal_id, 'like'));
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                    const finalCounts = app.FeedbackService.getSignalCounts(signal.signal_id);
+                    result.push(`After toggle: ${finalCounts.likes} likes`);
+                    
+                    if (finalCounts.likes === initialCounts.likes) {
+                        result.push('✅ Toggle functionality working');
+                    }
+                } else {
+                    result.push('❌ Like button not updating count');
+                }
+                
+                showResult('signalFeedResult', result.join('\n'), 'info');
+            } catch (error) {
+                showResult('signalFeedResult', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testNotAccurateButton() {
+            const app = getAppWindow();
+            const result = [];
+            
+            try {
+                const state = app.signalsStore.getState();
+                const signal = state.signals[0];
+                
+                result.push(`Testing not-accurate for signal: ${signal.signal_id}`);
+                
+                // Get initial count
+                const initialCounts = app.FeedbackService.getSignalCounts(signal.signal_id);
+                result.push(`Initial not-accurate: ${initialCounts.notAccurate}`);
+                
+                // Submit not-accurate feedback
+                app.dispatcher.dispatch(app.Actions.submitFeedback(signal.signal_id, 'not-accurate'));
+                
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                // Check new count
+                const newCounts = app.FeedbackService.getSignalCounts(signal.signal_id);
+                result.push(`New not-accurate: ${newCounts.notAccurate}`);
+                
+                if (newCounts.notAccurate > initialCounts.notAccurate) {
+                    result.push('✅ Not Accurate button working correctly');
+                } else {
+                    result.push('❌ Not Accurate button not updating count');
+                }
+                
+                showResult('signalFeedResult', result.join('\n'), 'info');
+            } catch (error) {
+                showResult('signalFeedResult', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCommentCRUD() {
+            const app = getAppWindow();
+            const result = [];
+            
+            try {
+                const state = app.signalsStore.getState();
+                const signal = state.signals[0];
+                const testComment = 'Test comment from automated test';
+                
+                result.push(`Testing comments for signal: ${signal.signal_id}`);
+                
+                // Add comment
+                app.dispatcher.dispatch(app.Actions.requestComment(signal.signal_id, testComment));
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                // Get comments
+                const comments = app.signalsStore.getState().comments.get(signal.signal_id) || [];
+                const addedComment = comments.find(c => c.text === testComment);
+                
+                if (addedComment) {
+                    result.push('✅ Comment added successfully');
+                    result.push(`Comment ID: ${addedComment.id}`);
+                    
+                    // Edit comment
+                    const editedText = 'Edited test comment';
+                    app.dispatcher.dispatch(app.Actions.updateComment(addedComment.id, editedText, signal.signal_id));
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                    const editedComments = app.signalsStore.getState().comments.get(signal.signal_id) || [];
+                    const editedComment = editedComments.find(c => c.id === addedComment.id);
+                    
+                    if (editedComment && editedComment.text === editedText) {
+                        result.push('✅ Comment edited successfully');
+                        
+                        // Delete comment
+                        app.dispatcher.dispatch(app.Actions.deleteComment(addedComment.id, signal.signal_id));
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        
+                        const finalComments = app.signalsStore.getState().comments.get(signal.signal_id) || [];
+                        const deletedComment = finalComments.find(c => c.id === addedComment.id);
+                        
+                        if (!deletedComment) {
+                            result.push('✅ Comment deleted successfully');
+                        } else {
+                            result.push('❌ Comment deletion failed');
+                        }
+                    } else {
+                        result.push('❌ Comment edit failed');
+                    }
+                } else {
+                    result.push('❌ Comment add failed');
+                }
+                
+                showResult('signalFeedResult', result.join('\n'), 'info');
+            } catch (error) {
+                showResult('signalFeedResult', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testPriorityFilters() {
+            const app = getAppWindow();
+            const result = [];
+            
+            try {
+                const state = app.signalsStore.getState();
+                const allSignals = state.signals;
+                
+                result.push(`Total signals: ${allSignals.length}`);
+                
+                // Test High priority filter
+                app.dispatcher.dispatch(app.Actions.applyFilters({ priority: 'High', category: 'all' }));
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                const highPriorityState = app.signalsStore.getState();
+                const highSignals = highPriorityState.filteredSignals;
+                result.push(`High priority signals: ${highSignals.length}`);
+                
+                // Test Medium priority filter
+                app.dispatcher.dispatch(app.Actions.applyFilters({ priority: 'Medium', category: 'all' }));
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                const mediumPriorityState = app.signalsStore.getState();
+                const mediumSignals = mediumPriorityState.filteredSignals;
+                result.push(`Medium priority signals: ${mediumSignals.length}`);
+                
+                // Test Low priority filter
+                app.dispatcher.dispatch(app.Actions.applyFilters({ priority: 'Low', category: 'all' }));
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                const lowPriorityState = app.signalsStore.getState();
+                const lowSignals = lowPriorityState.filteredSignals;
+                result.push(`Low priority signals: ${lowSignals.length}`);
+                
+                // Reset filter
+                app.dispatcher.dispatch(app.Actions.applyFilters({ priority: 'all', category: 'all' }));
+                
+                result.push('✅ Priority filters working');
+                showResult('signalFeedResult', result.join('\n'), 'success');
+            } catch (error) {
+                showResult('signalFeedResult', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Portfolio Tests
+        async function testPortfolioNavigation() {
+            const app = getAppWindow();
+            const result = [];
+            
+            try {
+                // Switch to portfolio tab
+                app.dispatcher.dispatch(app.Actions.switchTab('my-portfolio'));
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+                const state = app.signalsStore.getState();
+                result.push(`Current tab: ${state.currentTab}`);
+                
+                if (state.currentTab === 'my-portfolio') {
+                    result.push('✅ Successfully navigated to Portfolio tab');
+                    
+                    // Check if accounts are displayed
+                    const accounts = state.accounts;
+                    result.push(`Accounts loaded: ${accounts.size}`);
+                    
+                    if (accounts.size > 0) {
+                        result.push('✅ Accounts displayed in portfolio');
+                        
+                        // List first few accounts
+                        let count = 0;
+                        for (const [id, account] of accounts) {
+                            if (count++ < 3) {
+                                result.push(`  - ${account.name}: ${account.signals.length} signals`);
+                            }
+                        }
+                    } else {
+                        result.push('⚠️ No accounts found');
+                    }
+                } else {
+                    result.push('❌ Failed to navigate to Portfolio tab');
+                }
+                
+                showResult('portfolioResult', result.join('\n'), 'info');
+            } catch (error) {
+                showResult('portfolioResult', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAddToPlan() {
+            const app = getAppWindow();
+            const result = [];
+            
+            try {
+                const state = app.signalsStore.getState();
+                const signal = state.signals.find(s => s.ai_signal_relevance_reason);
+                
+                if (!signal) {
+                    showResult('portfolioResult', 'No signal with AI recommendations found', 'error');
+                    return;
+                }
+                
+                result.push(`Testing Add to Plan for signal: ${signal.signal_id}`);
+                
+                // Create test action plan
+                const testPlan = {
+                    signalId: signal.signal_id,
+                    accountId: signal.account_id,
+                    title: 'Test Action Plan',
+                    plays: ['Test Play 1'],
+                    userNotes: 'Test notes'
+                };
+                
+                app.dispatcher.dispatch(app.Actions.requestActionPlan(
+                    testPlan.signalId,
+                    testPlan.accountId,
+                    testPlan.title,
+                    testPlan.plays,
+                    testPlan.userNotes
+                ));
+                
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+                // Check if plan was created
+                const newState = app.signalsStore.getState();
+                const plans = Array.from(newState.actionPlans.values());
+                const createdPlan = plans.find(p => p.title === 'Test Action Plan');
+                
+                if (createdPlan) {
+                    result.push('✅ Action plan created successfully');
+                    result.push(`Plan ID: ${createdPlan.id}`);
+                } else {
+                    result.push('❌ Failed to create action plan');
+                }
+                
+                showResult('portfolioResult', result.join('\n'), createdPlan ? 'success' : 'error');
+            } catch (error) {
+                showResult('portfolioResult', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testExpandCollapse() {
+            const app = getAppWindow();
+            const result = [];
+            
+            try {
+                // Navigate to portfolio
+                app.dispatcher.dispatch(app.Actions.switchTab('my-portfolio'));
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+                // Find expand/collapse buttons
+                const expandButtons = app.document.querySelectorAll('[data-action="toggle-account-signals"]');
+                result.push(`Found ${expandButtons.length} expandable account cards`);
+                
+                if (expandButtons.length > 0) {
+                    // Test first button
+                    const firstButton = expandButtons[0];
+                    const accountId = firstButton.getAttribute('data-account-id');
+                    
+                    result.push(`Testing expand/collapse for account: ${accountId}`);
+                    
+                    // Click to expand
+                    firstButton.click();
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                    const signalsContainer = app.document.querySelector(`#account-signals-${accountId}`);
+                    if (signalsContainer && signalsContainer.style.display !== 'none') {
+                        result.push('✅ Account expanded successfully');
+                        
+                        // Click to collapse
+                        firstButton.click();
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        
+                        if (signalsContainer.style.display === 'none') {
+                            result.push('✅ Account collapsed successfully');
+                        } else {
+                            result.push('⚠️ Collapse may not have worked');
+                        }
+                    } else {
+                        result.push('❌ Expand did not work');
+                    }
+                } else {
+                    result.push('⚠️ No expandable accounts found');
+                }
+                
+                showResult('portfolioResult', result.join('\n'), 'info');
+            } catch (error) {
+                showResult('portfolioResult', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testPortfolioFilters() {
+            const app = getAppWindow();
+            const result = [];
+            
+            try {
+                // Navigate to portfolio
+                app.dispatcher.dispatch(app.Actions.switchTab('my-portfolio'));
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+                const filterButtons = app.document.querySelectorAll('.filter-btn');
+                result.push(`Found ${filterButtons.length} filter buttons`);
+                
+                // Test each filter
+                const filters = ['all', 'pending', 'in_progress', 'completed'];
+                for (const filter of filters) {
+                    app.dispatcher.dispatch(app.Actions.applyPortfolioFilter(filter));
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                    const state = app.signalsStore.getState();
+                    result.push(`Filter '${filter}' applied`);
+                }
+                
+                result.push('✅ Portfolio filters tested');
+                showResult('portfolioResult', result.join('\n'), 'success');
+            } catch (error) {
+                showResult('portfolioResult', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Action Plans Tests
+        async function testActionPlansDisplay() {
+            const app = getAppWindow();
+            const result = [];
+            
+            try {
+                // Switch to action plans tab
+                app.dispatcher.dispatch(app.Actions.switchTab('actions'));
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+                const state = app.signalsStore.getState();
+                result.push(`Current tab: ${state.currentTab}`);
+                
+                if (state.currentTab === 'actions') {
+                    result.push('✅ Successfully navigated to Action Plans tab');
+                    
+                    // Check if action plans are displayed
+                    const plans = Array.from(state.actionPlans.values());
+                    result.push(`Action plans loaded: ${plans.length}`);
+                    
+                    if (plans.length > 0) {
+                        result.push('✅ Action plans displayed');
+                        
+                        // List first few plans
+                        plans.slice(0, 3).forEach(plan => {
+                            result.push(`  - ${plan.title || plan.accountName}: ${plan.status}`);
+                        });
+                    } else {
+                        result.push('⚠️ No action plans found');
+                    }
+                } else {
+                    result.push('❌ Failed to navigate to Action Plans tab');
+                }
+                
+                showResult('actionPlansResult', result.join('\n'), 'info');
+            } catch (error) {
+                showResult('actionPlansResult', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCheckboxFunctionality() {
+            const app = getAppWindow();
+            const result = [];
+            
+            try {
+                const state = app.signalsStore.getState();
+                const plans = Array.from(state.actionPlans.values());
+                
+                if (plans.length === 0) {
+                    showResult('actionPlansResult', 'No action plans to test', 'error');
+                    return;
+                }
+                
+                const testPlan = plans[0];
+                result.push(`Testing checkbox for plan: ${testPlan.id}`);
+                result.push(`Initial status: ${testPlan.status}`);
+                
+                // Toggle status
+                const newStatus = testPlan.status === 'complete' ? 'pending' : 'complete';
+                app.dispatcher.dispatch(app.Actions.updateActionPlan(testPlan.id, { status: newStatus }));
+                
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+                // Check if status updated
+                const updatedState = app.signalsStore.getState();
+                const updatedPlan = updatedState.actionPlans.get(testPlan.id);
+                
+                if (updatedPlan && updatedPlan.status === newStatus) {
+                    result.push(`✅ Status updated to: ${newStatus}`);
+                } else {
+                    result.push('❌ Status update failed');
+                }
+                
+                showResult('actionPlansResult', result.join('\n'), updatedPlan ? 'success' : 'error');
+            } catch (error) {
+                showResult('actionPlansResult', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testTaskDetailsModal() {
+            const app = getAppWindow();
+            const result = [];
+            
+            try {
+                // Navigate to action plans
+                app.dispatcher.dispatch(app.Actions.switchTab('actions'));
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+                // Find task links
+                const taskLinks = app.document.querySelectorAll('.task-link');
+                result.push(`Found ${taskLinks.length} task links`);
+                
+                if (taskLinks.length > 0) {
+                    // Click first task
+                    taskLinks[0].click();
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    
+                    // Check if modal opened
+                    const modal = app.document.getElementById('taskDetailsModal');
+                    if (modal && modal.style.display === 'flex') {
+                        result.push('✅ Task details modal opened');
+                        
+                        // Check modal content
+                        const taskTitle = modal.querySelector('.task-title');
+                        if (taskTitle) {
+                            result.push(`Task title: ${taskTitle.textContent}`);
+                        }
+                        
+                        // Close modal
+                        const closeBtn = modal.querySelector('.btn-close-modal');
+                        if (closeBtn) {
+                            closeBtn.click();
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                            
+                            if (modal.style.display === 'none') {
+                                result.push('✅ Modal closed successfully');
+                            }
+                        }
+                    } else {
+                        result.push('❌ Modal did not open');
+                    }
+                } else {
+                    result.push('⚠️ No tasks found to test');
+                }
+                
+                showResult('actionPlansResult', result.join('\n'), 'info');
+            } catch (error) {
+                showResult('actionPlansResult', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAutoSave() {
+            const app = getAppWindow();
+            const result = [];
+            
+            try {
+                const state = app.signalsStore.getState();
+                const plans = Array.from(state.actionPlans.values());
+                
+                if (plans.length === 0) {
+                    showResult('actionPlansResult', 'No action plans to test', 'error');
+                    return;
+                }
+                
+                const testPlan = plans[0];
+                result.push(`Testing auto-save for plan: ${testPlan.id}`);
+                
+                // Test multiple updates
+                const updates = {
+                    priority: 'High',
+                    status: 'in_progress',
+                    dueDate: '2025-12-31',
+                    description: 'Updated description via auto-save test'
+                };
+                
+                for (const [key, value] of Object.entries(updates)) {
+                    result.push(`Updating ${key} to: ${value}`);
+                    app.dispatcher.dispatch(app.Actions.updateActionPlan(testPlan.id, { [key]: value }));
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                }
+                
+                // Verify all updates
+                const finalState = app.signalsStore.getState();
+                const updatedPlan = finalState.actionPlans.get(testPlan.id);
+                
+                if (updatedPlan) {
+                    let allUpdated = true;
+                    for (const [key, value] of Object.entries(updates)) {
+                        if (updatedPlan[key] !== value) {
+                            result.push(`❌ ${key} not updated`);
+                            allUpdated = false;
+                        }
+                    }
+                    
+                    if (allUpdated) {
+                        result.push('✅ All fields auto-saved successfully');
+                    }
+                } else {
+                    result.push('❌ Could not verify updates');
+                }
+                
+                showResult('actionPlansResult', result.join('\n'), 'info');
+            } catch (error) {
+                showResult('actionPlansResult', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Store State Inspector
+        function inspectStoreState() {
+            try {
+                const app = getAppWindow();
+                const state = app.signalsStore.getState();
+                
+                const summary = {
+                    currentTab: state.currentTab,
+                    totalSignals: state.signals.length,
+                    totalAccounts: state.accounts.size,
+                    totalActionPlans: state.actionPlans.size,
+                    totalComments: state.comments.size,
+                    totalInteractions: state.interactions.size,
+                    loading: state.loading,
+                    filters: state.viewState.filters
+                };
+                
+                showResult('stateResult', JSON.stringify(summary, null, 2), 'info');
+            } catch (error) {
+                showResult('stateResult', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        function inspectInteractions() {
+            try {
+                const app = getAppWindow();
+                const state = app.signalsStore.getState();
+                const interactions = [];
+                
+                for (const [signalId, signalInteractions] of state.interactions) {
+                    interactions.push({
+                        signalId,
+                        count: signalInteractions.length,
+                        types: signalInteractions.map(i => i.interactionType)
+                    });
+                }
+                
+                showResult('stateResult', JSON.stringify(interactions.slice(0, 10), null, 2), 'info');
+            } catch (error) {
+                showResult('stateResult', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        function inspectComments() {
+            try {
+                const app = getAppWindow();
+                const state = app.signalsStore.getState();
+                const comments = [];
+                
+                for (const [signalId, signalComments] of state.comments) {
+                    comments.push({
+                        signalId,
+                        count: signalComments.length,
+                        comments: signalComments.map(c => ({
+                            id: c.id,
+                            text: c.text.substring(0, 50) + '...',
+                            timestamp: c.timestamp
+                        }))
+                    });
+                }
+                
+                showResult('stateResult', JSON.stringify(comments.slice(0, 5), null, 2), 'info');
+            } catch (error) {
+                showResult('stateResult', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        function inspectActionPlans() {
+            try {
+                const app = getAppWindow();
+                const state = app.signalsStore.getState();
+                const plans = Array.from(state.actionPlans.values()).slice(0, 5);
+                
+                const summary = plans.map(plan => ({
+                    id: plan.id,
+                    title: plan.title,
+                    status: plan.status,
+                    priority: plan.priority,
+                    accountId: plan.accountId,
+                    signalId: plan.signalId
+                }));
+                
+                showResult('stateResult', JSON.stringify(summary, null, 2), 'info');
+            } catch (error) {
+                showResult('stateResult', `Error: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

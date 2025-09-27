@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Signal Mapping</title>
+</head>
+<body>
+    <h1>Test Signal Mapping</h1>
+    <div id="results"></div>
+
+    <script src="js/flux/services/SignalDimensionService.js"></script>
+    <script>
+        async function testSignalMapping() {
+            const resultsDiv = document.getElementById('results');
+            
+            try {
+                // Load signal dimension service
+                const signalDimensionService = new SignalDimensionService();
+                await signalDimensionService.loadSignalDimensions();
+                
+                // Test specific signal codes from the data
+                const testSignals = [
+                    { name: 'UC-01', category: 'Use Case' },
+                    { name: 'ARCH-01', category: 'Architecture' },
+                    { name: 'REL-04', category: 'Relationship' },
+                    { name: 'ARCH-02', category: 'Architecture' },
+                    { name: 'UC-02', category: 'Use Case' },
+                    { name: 'EB-01', category: 'Enablement' },
+                    { name: 'BIZ-01', category: 'Business' }
+                ];
+                
+                let results = '<h2>Signal Polarity Mapping Test</h2><ul>';
+                
+                testSignals.forEach(signal => {
+                    const signalDimension = signalDimensionService.getSignalDimension(signal.name);
+                    const polarity = signalDimension ? signalDimension.polarity : 'Not Found';
+                    results += `<li><strong>${signal.name}</strong> (${signal.category}): ${polarity}</li>`;
+                });
+                
+                results += '</ul>';
+                
+                // Count by polarity
+                const polarityCounts = {};
+                testSignals.forEach(signal => {
+                    const signalDimension = signalDimensionService.getSignalDimension(signal.name);
+                    const polarity = signalDimension ? signalDimension.polarity : 'Not Found';
+                    polarityCounts[polarity] = (polarityCounts[polarity] || 0) + 1;
+                });
+                
+                results += '<h3>Polarity Counts:</h3><ul>';
+                Object.entries(polarityCounts).forEach(([polarity, count]) => {
+                    results += `<li><strong>${polarity}</strong>: ${count}</li>`;
+                });
+                results += '</ul>';
+                
+                resultsDiv.innerHTML = results;
+                
+            } catch (error) {
+                console.error('Error testing signal mapping:', error);
+                resultsDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+        
+        // Run test when page loads
+        testSignalMapping();
+    </script>
+</body>
+</html>

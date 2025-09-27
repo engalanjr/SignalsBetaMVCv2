@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ActionPlansService Test</title>
+</head>
+<body>
+    <h1>ActionPlansService Test</h1>
+    <div id="test-results"></div>
+    
+    <script>
+        // Simple test framework
+        class TestRunner {
+            constructor() {
+                this.tests = [];
+                this.results = [];
+            }
+            
+            test(name, testFn) {
+                this.tests.push({ name, testFn });
+            }
+            
+            async run() {
+                const resultsDiv = document.getElementById('test-results');
+                resultsDiv.innerHTML = '<h2>Running Tests...</h2>';
+                
+                for (const test of this.tests) {
+                    try {
+                        await test.testFn();
+                        this.results.push({ name: test.name, status: 'PASS' });
+                        console.log(`✅ ${test.name}: PASS`);
+                    } catch (error) {
+                        this.results.push({ name: test.name, status: 'FAIL', error: error.message });
+                        console.error(`❌ ${test.name}: FAIL - ${error.message}`);
+                    }
+                }
+                
+                this.displayResults();
+            }
+            
+            displayResults() {
+                const resultsDiv = document.getElementById('test-results');
+                const passed = this.results.filter(r => r.status === 'PASS').length;
+                const total = this.results.length;
+                
+                let html = `<h2>Test Results: ${passed}/${total} passed</h2>`;
+                this.results.forEach(result => {
+                    const icon = result.status === 'PASS' ? '✅' : '❌';
+                    html += `<div>${icon} ${result.name}: ${result.status}`;
+                    if (result.error) {
+                        html += ` - ${result.error}`;
+                    }
+                    html += '</div>';
+                });
+                
+                resultsDiv.innerHTML = html;
+            }
+        }
+        
+        // Mock the global dependencies needed for testing
+        function setupMockEnvironment() {
+            // Mock dispatcher
+            window.dispatcher = {
+                dispatch: function(action) {
+                    console.log('Mock dispatch:', action.type, action.payload);
+                }
+            };
+            
+            // Mock signalsStore
+            window.signalsStore = {
+                getState: function() {
+                    return {
+                        userInfo: { userId: 'test-user-1' },
+                        signalsById: new Map([
+                            ['signal-123', { account_id: 'account-456' }]
+                        ]),
+                        actionPlans: new Map(),
+                        actionPlansByAccount: new Map()
+                    };
+                }
+            };
+            
+            // Mock Actions
+            window.Actions = {
+                showMessage: function(message, type) {
+                    return { type: 'MESSAGE_SHOWN', payload: { message, type } };
+                },
+                requestActionPlan: function(signalId, title, description, tasks, userId) {
+                    return { 
+                        type: 'ACTION_PLAN_REQUESTED', 
+                        payload: { 
+                            signalId, title, description, tasks, userId,
+                            operationId: `plan_${signalId}_${Date.now()}`
+                        }
+                    };
+                },
+                actionPlanSucceeded: function(plan, operationId) {
+                    return { type: 'ACTION_PLAN_SUCCEEDED', payload: { plan, operationId } };
+                },
+                actionPlanFailed: function(operationId, error) {
+                    return { type: 'ACTION_PLAN_FAILED', payload: { operationId, error } };
+                }
+            };
+            
+            // Mock SignalsRepository
+            window.SignalsRepository = {
+                saveActionPlan: async function(planData) {
+                    console.log('Mock saveActionPlan called with:', planData);
+                    // Simulate the real behavior - always return success for optimistic updates
+                    return {
+                        success: true,
+                        data: { ...planData, id: planData.id || `plan_${Date.now()}` }
+                    };
+                }
+            };
+        }
+        
+        // Initialize tests
+        const testRunner = new TestRunner();
+        
+        testRunner.test('Global dependencies are accessible', () => {
+            const service = window.ActionPlansService;
+            if (!service) throw new Error('ActionPlansService not found');
+            
+            // Test that the new safe methods work
+            const dispatcher = service.getDispatcher();
+            const signalsStore = service.getSignalsStore();
+            
+            if (!dispatcher) throw new Error('Dispatcher not accessible');
+            if (!signalsStore) throw new Error('SignalsStore not accessible');
+        });
+        
+        testRunner.test('Local persistence methods work', () => {
+            const service = window.ActionPlansService;
+            
+            // Clear any existing data
+            localStorage.removeItem('signalsai_action_plans');
+            
+            const testPlan = {
+                id: 'test-plan-123',
+                title: 'Test Plan',
+                accountId: 'test-account',
+                status: 'active'
+            };
+            
+            // Test storing
+            service.storeActionPlanLocally(testPlan);
+            
+            // Test retrieval
+            const localPlans = service.getLocalActionPlans();
+            if (!localPlans['test-plan-123']) {
+                throw new Error('Plan was not stored locally');
+            }
+            
+            if (localPlans['test-plan-123'].title !== 'Test Plan') {
+                throw new Error('Plan data was not stored correctly');
+            }
+        });
+        
+        testRunner.test('Timestamp cleanup works', () => {
+            const service = window.ActionPlansService;
+            
+            // Set up a test timestamp
+            const testTimestamps = { 'test-account-123': Date.now() };
+            localStorage.setItem('signalsai_plan_timestamps', JSON.stringify(testTimestamps));
+            
+            // Clear it
+            service.clearPlanCreationTimestamp('test-account-123');
+            
+            // Verify it was cleared
+            const updatedTimestamps = JSON.parse(localStorage.getItem('signalsai_plan_timestamps') || '{}');
+            if (updatedTimestamps['test-account-123']) {
+                throw new Error('Timestamp was not cleared');
+            }
+        });
+        
+        testRunner.test('createActionPlan works with mocked environment', async () => {
+            const service = window.ActionPlansService;
+            
+            // Clear any existing data
+            localStorage.removeItem('signalsai_action_plans');
+            
+            const result = await service.createActionPlan(
+                'signal-123',
+                'Test Action Plan',
+                'Test Description',
+                [],
+                null
+            );
+            
+            if (!result) {
+                throw new Error('createActionPlan returned null');
+            }
+            
+            if (result.title !== 'Test Action Plan') {
+                throw new Error('Plan title incorrect');
+            }
+            
+            // Verify it was stored locally
+            const localPlans = service.getLocalActionPlans();
+            if (!Object.keys(localPlans).length) {
+                throw new Error('Plan was not stored locally');
+            }
+        });
+        
+        testRunner.test('Error handling works correctly', async () => {
+            const service = window.ActionPlansService;
+            
+            // Test with empty title
+            const result = await service.createActionPlan('signal-123', '', 'Description');
+            if (result !== null) {
+                throw new Error('Should return null for empty title');
+            }
+        });
+        
+        // Run tests after page loads and dependencies are set up
+        window.addEventListener('load', () => {
+            setupMockEnvironment();
+            
+            setTimeout(() => {
+                testRunner.run();
+            }, 100);
+        });
+    </script>
+</body>
+</html>

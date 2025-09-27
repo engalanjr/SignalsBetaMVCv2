@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Signal Polarity Mapping</title>
+</head>
+<body>
+    <h1>Test Signal Polarity Mapping</h1>
+    <div id="results"></div>
+
+    <script src="js/flux/services/SignalDimensionService.js"></script>
+    <script>
+        async function testPolarityMapping() {
+            const resultsDiv = document.getElementById('results');
+            
+            try {
+                // Load signal dimension service
+                const signalDimensionService = new SignalDimensionService();
+                await signalDimensionService.loadSignalDimensions();
+                
+                // Get all signal dimensions
+                const allDimensions = signalDimensionService.getAllSignalDimensions();
+                console.log('All signal dimensions:', allDimensions);
+                
+                // Count by polarity
+                const polarityCounts = {};
+                for (const [code, dimension] of allDimensions) {
+                    const polarity = dimension.polarity;
+                    polarityCounts[polarity] = (polarityCounts[polarity] || 0) + 1;
+                }
+                
+                console.log('Polarity counts:', polarityCounts);
+                
+                // Display results
+                resultsDiv.innerHTML = `
+                    <h2>Signal Dimension Service Results</h2>
+                    <p>Total signal dimensions: ${allDimensions.size}</p>
+                    <h3>Polarity Counts:</h3>
+                    <ul>
+                        ${Object.entries(polarityCounts).map(([polarity, count]) => 
+                            `<li><strong>${polarity}</strong>: ${count} signals</li>`
+                        ).join('')}
+                    </ul>
+                    <h3>Risk Signals:</h3>
+                    <ul>
+                        ${Array.from(allDimensions.entries())
+                            .filter(([code, dimension]) => dimension.polarity === 'Risk')
+                            .map(([code, dimension]) => `<li>${code}: ${dimension.name}</li>`)
+                            .join('')}
+                    </ul>
+                    <h3>Opportunity Signals:</h3>
+                    <ul>
+                        ${Array.from(allDimensions.entries())
+                            .filter(([code, dimension]) => dimension.polarity === 'Opportunity')
+                            .map(([code, dimension]) => `<li>${code}: ${dimension.name}</li>`)
+                            .join('')}
+                    </ul>
+                `;
+                
+            } catch (error) {
+                console.error('Error testing polarity mapping:', error);
+                resultsDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+        
+        // Run test when page loads
+        testPolarityMapping();
+    </script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+[
+  {
+    "id": "fa56f089-a6f5-4ded-921a-f93f677a44d2",
+    "datastoreId": "ef34ec80-120c-47ad-9c41-e3cac7a9fa4c",
+    "collectionId": "dedc126b-3a2e-4eae-8fa1-e76ccde748c2",
+    "syncRequired": true,
+    "owner": "621623466",
+    "createdBy": "621623466",
+    "createdOn": "2025-09-13T18:38:20.678Z",
+    "updatedOn": "2025-09-13T18:38:20.678Z",
+    "updatedBy": "621623466",
+    "content": {
+      "id": "plan-1757788700526",
+      "actionId": "36bdba5b-30db-4654-a123-43c9c0cf3348",
+      "accountId": "0015000000Yrl38AAB",
+      "title": "Schedule Domo Architecture Assessment to address sandbox-to-production migration issues",
+      "description": "paid engagement",
+      "plays": ["Domo Architecture Assessments"],
+      "status": "pending",
+      "priority": "Medium",
+      "dueDate": "2025-09-20",
+      "assignee": 621623466,
+      "createdDate": "2025-09-13T18:38:20.526Z",
+      "createdAt": "2025-09-13T18:38:20.526Z",
+      "updatedAt": "2025-09-13T18:38:20.526Z",
+      "planTitle": "Action Plan - 9/13/2025",
+      "createdBy": "Ed Engalan",
+      "createdByUserId": 621623466,
+      "signalPolarity": "Opportunities"
+    }
+  },
+  {
+    "id": "c93583c0-aa9f-47c7-878d-6c4b4bc6213c",
+    "datastoreId": "ef34ec80-120c-47ad-9c41-e3cac7a9fa4c",
+    "collectionId": "dedc126b-3a2e-4eae-8fa1-e76ccde748c2",
+    "syncRequired": true,
+    "owner": "621623466",
+    "createdBy": "621623466",
+    "createdOn": "2025-09-13T18:41:57.756Z",
+    "updatedOn": "2025-09-13T18:41:57.756Z",
+    "updatedBy": "621623466",
+    "content": {
+      "id": "plan-1757788917605",
+      "actionId": "aa259a4a-88c0-42ad-aafe-299b4f2a0904",
+      "accountId": "0015000000YrkyqAAB",
+      "title": "Schedule a technical demo focused on Domo's BigQuery connector capabilities and data pipeline optimization",
+      "description": "do both",
+      "plays": [
+        "Feature Demo/Deep Dive Enablement (ACE)",
+        "Domo instance Optimization"
+      ],
+      "status": "pending",
+      "priority": "Medium",
+      "dueDate": "2025-09-20",
+      "assignee": 621623466,
+      "createdDate": "2025-09-13T18:41:57.605Z",
+      "createdAt": "2025-09-13T18:41:57.605Z",
+      "updatedAt": "2025-09-13T18:41:57.605Z",
+      "planTitle": "Action Plan - 9/13/2025",
+      "createdBy": "Ed Engalan",
+      "createdByUserId": 621623466,
+      "signalPolarity": "Enrichment"
+    }
+  }
+]

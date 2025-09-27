@@ -1,0 +1,41 @@
+{
+    "id": "5470dd2b-b00f-4d38-ab89-981359c7277e",
+    "name": "SignalsAI BETA v4",
+    "version": "0.0.1",
+    "datasetsMapping": [
+       {
+          "dataSetId": "c716a3cb-9bbc-452d-9ee8-0c15f76b1e22",
+          "alias": "signaldim",
+          "fields": [],
+          "dql": null
+       },
+       {
+          "dataSetId": "f49c6a4d-4894-4124-9988-5e40414cf09f",
+          "alias": "signals",
+          "fields": [],
+          "dql": null
+       }
+    ],
+    "size": {
+       "width": 1,
+       "height": 1
+    },
+    "fullpage": true,
+    "collectionsMapping": [
+       {
+          "id": "e2c8fe94-accb-4cca-9903-57510e28ed91",
+          "name": "SignalAI.Interactions",
+          "syncEnabled": false
+       },
+       {
+          "id": "ff2c1ce7-561f-4d74-87be-0563e0803d6e",
+          "name": "SignalAI.Comments",
+          "syncEnabled": false
+       },
+       {
+          "id": "dedc126b-3a2e-4eae-8fa1-e76ccde748c2",
+          "name": "SignalAI.ActionPlans",
+          "syncEnabled": false
+       }
+    ]
+ }

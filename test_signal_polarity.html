@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Signal Polarity Assignment</title>
+</head>
+<body>
+    <h1>Test Signal Polarity Assignment</h1>
+    <div id="results"></div>
+
+    <script src="js/flux/services/SignalDimensionService.js"></script>
+    <script>
+        async function testSignalPolarityAssignment() {
+            const resultsDiv = document.getElementById('results');
+            
+            try {
+                // Load signal dimension service
+                const signalDimensionService = new SignalDimensionService();
+                await signalDimensionService.loadSignalDimensions();
+                
+                // Load sample signals data
+                const response = await fetch('./data.csv');
+                const csvText = await response.text();
+                const lines = csvText.split('\n');
+                const headers = lines[0].split(',');
+                
+                // Parse CSV data
+                const signals = [];
+                for (let i = 1; i < Math.min(lines.length, 20); i++) { // Test first 20 signals
+                    const values = lines[i].split(',');
+                    if (values.length >= headers.length) {
+                        const signal = {};
+                        headers.forEach((header, index) => {
+                            signal[header] = values[index];
+                        });
+                        signals.push(signal);
+                    }
+                }
+                
+                console.log('Sample signals:', signals);
+                
+                // Test polarity assignment
+                const polarityCounts = {};
+                const riskSignals = [];
+                const opportunitySignals = [];
+                
+                signals.forEach(signal => {
+                    const signalCode = signal.code || '';
+                    const signalDimension = signalDimensionService.getSignalDimension(signalCode);
+                    let polarity = 'Enrichment'; // Default
+                    
+                    if (signalDimension && signalDimension.polarity) {
+                        polarity = signalDimension.polarity;
+                    }
+                    
+                    polarityCounts[polarity] = (polarityCounts[polarity] || 0) + 1;
+                    
+                    if (polarity === 'Risk') {
+                        riskSignals.push({
+                            code: signalCode,
+                            name: signal.name || '',
+                            account: signal.account_name || '',
+                            polarity: polarity
+                        });
+                    } else if (polarity === 'Opportunity') {
+                        opportunitySignals.push({
+                            code: signalCode,
+                            name: signal.name || '',
+                            account: signal.account_name || '',
+                            polarity: polarity
+                        });
+                    }
+                });
+                
+                console.log('Polarity counts:', polarityCounts);
+                console.log('Risk signals:', riskSignals);
+                console.log('Opportunity signals:', opportunitySignals);
+                
+                // Count unique accounts with Risk signals
+                const riskAccounts = new Set(riskSignals.map(s => s.account)).size;
+                const opportunityAccounts = new Set(opportunitySignals.map(s => s.account)).size;
+                
+                // Display results
+                resultsDiv.innerHTML = `
+                    <h2>Signal Polarity Assignment Test</h2>
+                    <p>Total signals tested: ${signals.length}</p>
+                    <h3>Polarity Counts:</h3>
+                    <ul>
+                        ${Object.entries(polarityCounts).map(([polarity, count]) => 
+                            `<li><strong>${polarity}</strong>: ${count} signals</li>`
+                        ).join('')}
+                    </ul>
+                    <h3>Risk Signals (${riskSignals.length} signals, ${riskAccounts} unique accounts):</h3>
+                    <ul>
+                        ${riskSignals.map(s => `<li>${s.code}: ${s.name} (${s.account})</li>`).join('')}
+                    </ul>
+                    <h3>Opportunity Signals (${opportunitySignals.length} signals, ${opportunityAccounts} unique accounts):</h3>
+                    <ul>
+                        ${opportunitySignals.map(s => `<li>${s.code}: ${s.name} (${s.account})</li>`).join('')}
+                    </ul>
+                `;
+                
+            } catch (error) {
+                console.error('Error testing signal polarity assignment:', error);
+                resultsDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+        
+        // Run test when page loads
+        testSignalPolarityAssignment();
+    </script>
+</body>
+</html>

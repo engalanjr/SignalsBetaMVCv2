@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Test</title>
+</head>
+<body>
+    <h1>Basic Test</h1>
+    <div id="output">Loading...</div>
+
+    <script>
+        try {
+            console.log('Script is running...');
+            document.getElementById('output').innerHTML = 'Script is running...';
+            
+            // Test if classes are available
+            if (typeof SignalDimensionService !== 'undefined') {
+                console.log('SignalDimensionService is available');
+                document.getElementById('output').innerHTML += '<br>SignalDimensionService is available';
+            } else {
+                console.log('SignalDimensionService is NOT available');
+                document.getElementById('output').innerHTML += '<br>SignalDimensionService is NOT available';
+            }
+            
+            if (typeof SignalsRepository !== 'undefined') {
+                console.log('SignalsRepository is available');
+                document.getElementById('output').innerHTML += '<br>SignalsRepository is available';
+            } else {
+                console.log('SignalsRepository is NOT available');
+                document.getElementById('output').innerHTML += '<br>SignalsRepository is NOT available';
+            }
+        } catch (error) {
+            console.error('Error in script:', error);
+            document.getElementById('output').innerHTML = 'Error: ' + error.message;
+        }
+    </script>
+    
+    <script src="./js/flux/services/SignalDimensionService.js"></script>
+    <script src="./js/flux/repositories/SignalsRepository.js"></script>
+    
+    <script>
+        // Test after scripts load
+        setTimeout(function() {
+            if (typeof SignalDimensionService !== 'undefined') {
+                document.getElementById('output').innerHTML += '<br>After load: SignalDimensionService is available';
+            } else {
+                document.getElementById('output').innerHTML += '<br>After load: SignalDimensionService is NOT available';
+            }
+            
+            if (typeof SignalsRepository !== 'undefined') {
+                document.getElementById('output').innerHTML += '<br>After load: SignalsRepository is available';
+            } else {
+                document.getElementById('output').innerHTML += '<br>After load: SignalsRepository is NOT available';
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

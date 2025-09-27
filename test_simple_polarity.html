@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Polarity Test</title>
+</head>
+<body>
+    <h1>Simple Signal Polarity Test</h1>
+    <div id="output">Loading...</div>
+
+    <script>
+        // Simple test without modules
+        async function testPolarity() {
+            try {
+                console.log('🔍 Testing signal polarity...');
+                
+                // Load signal dimension service
+                const signalDimensionService = new SignalDimensionService();
+                await signalDimensionService.loadSignalDimensions();
+                console.log('✅ Loaded signal dimension service');
+                
+                // Load all data
+                const data = await SignalsRepository.loadAllData();
+                console.log('✅ Loaded all data');
+                
+                const accounts = Array.from(data.accounts.values());
+                console.log(`📊 Total accounts: ${accounts.length}`);
+                
+                // Count accounts with Risk signals
+                const accountsWithRiskSignals = accounts.filter(account => 
+                    account.signals.some(signal => {
+                        const polarity = signal.signal_polarity || signal['Signal Polarity'] || '';
+                        return polarity === 'Risk';
+                    })
+                );
+                
+                // Count accounts with Opportunity signals
+                const accountsWithOpportunitySignals = accounts.filter(account => 
+                    account.signals.some(signal => {
+                        const polarity = signal.signal_polarity || signal['Signal Polarity'] || '';
+                        return polarity === 'Opportunity';
+                    })
+                );
+                
+                console.log(`🚨 Accounts with Risk signals: ${accountsWithRiskSignals.length}`);
+                console.log(`📈 Accounts with Opportunity signals: ${accountsWithOpportunitySignals.length}`);
+                
+                // Show all signal polarities
+                const allPolarities = new Set();
+                accounts.forEach(account => {
+                    account.signals.forEach(signal => {
+                        const polarity = signal.signal_polarity || signal['Signal Polarity'] || '';
+                        allPolarities.add(polarity);
+                    });
+                });
+                console.log('Polarities:', Array.from(allPolarities));
+                
+                // Update the page
+                document.getElementById('output').innerHTML = 
+                    '<h2>Results:</h2>' +
+                    '<p><strong>Accounts with Risk signals:</strong> ' + accountsWithRiskSignals.length + '</p>' +
+                    '<p><strong>Accounts with Opportunity signals:</strong> ' + accountsWithOpportunitySignals.length + '</p>' +
+                    '<p><strong>All polarities found:</strong> ' + Array.from(allPolarities).join(', ') + '</p>';
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                document.getElementById('output').innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+            }
+        }
+        
+        // Load the required scripts first
+        const script1 = document.createElement('script');
+        script1.src = './js/flux/services/SignalDimensionService.js';
+        script1.onload = function() {
+            console.log('✅ SignalDimensionService loaded');
+            const script2 = document.createElement('script');
+            script2.src = './js/flux/repositories/SignalsRepository.js';
+            script2.onload = function() {
+                console.log('✅ SignalsRepository loaded');
+                testPolarity();
+            };
+            script2.onerror = function() {
+                console.error('❌ Failed to load SignalsRepository');
+                document.getElementById('output').innerHTML = '<p style="color: red;">Failed to load SignalsRepository</p>';
+            };
+            document.head.appendChild(script2);
+        };
+        script1.onerror = function() {
+            console.error('❌ Failed to load SignalDimensionService');
+            document.getElementById('output').innerHTML = '<p style="color: red;">Failed to load SignalDimensionService</p>';
+        };
+        document.head.appendChild(script1);
+    </script>
+</body>
+</html>
